@@ -24,16 +24,44 @@ $excludeFiles = @(
   "package-lock.json"
 )
 
-New-Item -ItemType Directory -Force -Path $outputRoot | Out-Null
-
-$null = & robocopy $repoRoot $outputRoot /MIR /R:1 /W:1 /NFL /NDL /NJH /NJS /NP /XD $excludeDirs /XF $excludeFiles
-
-if ($LASTEXITCODE -gt 7) {
-  throw "robocopy failed with exit code $LASTEXITCODE"
+if (Test-Path -LiteralPath $outputRoot) {
+  Get-ChildItem -LiteralPath $outputRoot -Force | Remove-Item -Recurse -Force
+} else {
+  New-Item -ItemType Directory -Force -Path $outputRoot | Out-Null
 }
 
-Get-ChildItem -Path $outputRoot -File -Recurse |
-  Where-Object { $_.Name -like "*Codex*" -or $_.Name -like "*NotebookLM*" } |
-  Remove-Item -Force
+$repoRootWithSeparator = $repoRoot.TrimEnd("\", "/") + [System.IO.Path]::DirectorySeparatorChar
+
+$filesToCopy = Get-ChildItem -Path $repoRoot -Recurse -File | Where-Object {
+  $relativePath = $_.FullName.Substring($repoRootWithSeparator.Length)
+  $segments = $relativePath -split "[/\\]"
+
+  if ($_.FullName.StartsWith($outputRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
+    return $false
+  }
+
+  if ($segments | Where-Object { $excludeDirs -contains $_ }) {
+    return $false
+  }
+
+  if ($excludeFiles -contains $_.Name) {
+    return $false
+  }
+
+  if ($_.Name -like "*Codex*" -or $_.Name -like "*NotebookLM*") {
+    return $false
+  }
+
+  return $true
+}
+
+foreach ($file in $filesToCopy) {
+  $relativePath = $file.FullName.Substring($repoRootWithSeparator.Length)
+  $destinationPath = Join-Path $outputRoot $relativePath
+  $destinationDir = Split-Path -Parent $destinationPath
+
+  New-Item -ItemType Directory -Force -Path $destinationDir | Out-Null
+  Copy-Item -LiteralPath $file.FullName -Destination $destinationPath -Force
+}
 
 Write-Host "Exported public content to $outputRoot"
