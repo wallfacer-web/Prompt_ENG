@@ -1,0 +1,10 @@
+{
+  "name": "prompt-eng-site",
+  "private": true,
+  "scripts": {
+    "site:install": "npm --prefix quartz ci",
+    "site:sync": "powershell -ExecutionPolicy Bypass -File scripts/export-public-content.ps1",
+    "site:dev": "npm run site:sync && cd quartz && node quartz/bootstrap-cli.mjs build --serve",
+    "site:build": "npm run site:sync && cd quartz && node quartz/bootstrap-cli.mjs build"
+  }
+}

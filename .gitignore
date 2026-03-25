@@ -1,10 +1,10 @@
 .obsidian/
 .smart-env/
 notebooklm-py/
-quartz/
-scripts/
-node_modules/
-public/
-content/
+repo-meta/
+.git.broken
+quartz/node_modules/
+quartz/public/
+quartz/.quartz-cache/
 .DS_Store
 Thumbs.db
