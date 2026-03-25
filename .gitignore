@@ -1,0 +1,10 @@
+.obsidian/
+.smart-env/
+notebooklm-py/
+quartz/
+scripts/
+node_modules/
+public/
+content/
+.DS_Store
+Thumbs.db
